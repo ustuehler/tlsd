@@ -3,11 +3,12 @@ from tlsd.analyzers.x509 import Certificate
 from tlsd.utils import Observable
 
 class TLSContext(Observable):
-    def __init__(self, tcp_stream):
+    def __init__(self, session, tcp_stream):
         Observable.__init__(self)
+        self.session = session
+        self.tcp_stream = tcp_stream
         self.server_names = list()
         self.certificates = list()
-        self.tcp_stream = tcp_stream
         self.incomplete_record = str()
         tcp_stream.subscribe(self, 'on_data')
 
@@ -47,16 +48,31 @@ class TLSContext(Observable):
                     record[TLSCertificateList].certificates)
             self.notify('on_certificates', self, self.certificates)
 
+    def role(self):
+        if self.tcp_stream.initiator:
+            return 'client'
+        else:
+            return 'server'
+
+    def summary(self):
+        return self.session.summary() + ' ' + self.role()
+
 class TLSSession(Observable):
     def __init__(self, tcp_connection):
         Observable.__init__(self)
-        self.client = TLSContext(tcp_connection.initiator)
-        self.server = TLSContext(tcp_connection.responder)
+        self.client = TLSContext(self, tcp_connection.initiator)
+        self.server = TLSContext(self, tcp_connection.responder)
         self.tcp_connection = tcp_connection
         tcp_connection.subscribe(self, 'on_disconnect')
 
     def on_disconnect(self, tcp_connection):
         self.notify('on_disconnect', self)
+
+    def summary(self):
+        '''Summarizes the TLS session in a single line. A TLS session is always
+        identified by the client's TCP stream. The order of the "IP:port" tuple
+        in the summary is always "initiator > responder".'''
+        return self.client.tcp_stream.summary()
 
 class TLSAnalyzer(Observable):
     def __init__(self, tcp_analyzer):

@@ -29,9 +29,4 @@ class TLSEnforcer(object):
         return True
 
     def log_info(self, tls_context, msg):
-        summary = tls_context.tcp_stream.summary()
-        if tls_context.tcp_stream.initiator:
-            mode = 'client'
-        else:
-            mode = 'server'
-        print '%s %s %s' % (summary, mode, msg)
+        print '%s %s' % (tls_context.summary(), msg)

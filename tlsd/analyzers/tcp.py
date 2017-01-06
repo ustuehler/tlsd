@@ -108,6 +108,9 @@ class TCPConnection(Observable):
         self.initiator = None
         self.responder = None
 
+    def summary(self):
+        return '%s,%d,%s,%d' % self.id
+
     def write_tcp_ip(self, packet):
         stream_id = self.tcp_ip_stream_id(packet)
         stream = self.tcp_ip_stream(stream_id)
@@ -175,9 +178,14 @@ class TCPAnalyzer(Observable):
         return connection
 
     def tcp_ip_connection_id(self, packet):
+        '''Unique TCP connection identifier, irrespective of the flow
+        direction in the given TCP/IP packet. This identifier may be
+        confusing to humans and should be avoided in log output.'''
+
         a = (packet.src, packet[TCP].sport)
         b = (packet.dst, packet[TCP].dport)
-        if packet.src < packet.dst:
-            return (a, b)
+
+        if a <= b:
+            return tuple(a + b)
         else:
-            return (b, a)
+            return tuple(b + a)
