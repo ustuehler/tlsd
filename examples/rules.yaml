@@ -1,0 +1,68 @@
+---
+settings:
+  block_policy: drop
+
+rules:
+- pass:
+    label: SNI-pinned certificate
+    server:
+      certificate:
+      - *github.com
+      - *wiki.growit.io
+- block:
+    label: violation of SNI-pinned certificate
+    client:
+      server_name:
+      - github.com
+      - wiki.growit.io
+- block:
+    label: missing SNI extension
+    client:
+      server_name: null
+
+- pass:
+    label: .com domain with plausible issuer
+    client:
+      server_name: {regexp: \.com$}
+    server:
+      certificates:
+        subject:
+          match:
+            country: {regexp: ^DE|US$}
+        issuer:
+          match:
+            country: {regexp: ^DE|US$}
+
+- pass:
+    label: .de domain with plausible subject and issuer
+    client:
+      server_name: {regexp: \.de$}
+    server:
+      certificate:
+        subject:
+          match:
+            commonName: {regexp: \.de$}
+            country: DE
+        issuer:
+          match:
+            country: DE
+
+- block:
+    label: unclassified TLS session
+
+references:
+  github.com: &github.com
+    subject:
+      CN: github.com
+      L: San Francisco
+      O: GitHub, Inc.
+      ST: California
+      "1.3.6.1.4.1.311.60.2.1.3": US
+      "1.3.6.1.4.1.311.60.2.1.2": Delaware
+      businessCategory: Private Organization
+      postalCode: 94107
+      serialNumber: 5157550
+  wiki.growit.io: &wiki.growit.io
+    match:
+      x509name:
+        CN: example.com

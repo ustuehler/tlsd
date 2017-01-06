@@ -89,10 +89,15 @@ class TCPStream(Observable):
     def handle_fin_or_rst(self, packet):
         # FIN: no more data from this end
         # RST: this end is done talking and listening
+        self.close()
+        #print '%s / closed / time=%s, seq=%d' % (packet.summary(), packet.time, packet.seq)
+
+    def close(self):
+        if self.closed:
+            return True
         self.closed = True
         self.seq = None
         self.fragments = dict()
-        #print '%s / closed / time=%s, seq=%d' % (packet.summary(), packet.time, packet.seq)
         self.notify('on_close', self)
 
 class TCPConnection(Observable):
