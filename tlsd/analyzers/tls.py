@@ -1,4 +1,5 @@
-from scapy_ssl_tls.ssl_tls import TLS, TLSExtServerNameIndication
+from scapy_ssl_tls.ssl_tls import TLS, TLSCertificateList, TLSExtServerNameIndication
+from tlsd.analyzers.x509 import Certificate
 from tlsd.utils import Observable
 
 class TLSContext(Observable):
@@ -31,7 +32,7 @@ class TLSContext(Observable):
         self.incomplete_record = data[complete_len:]
         #print '%s: remaining data: len=%d' % (mode, len(self.incomplete_record))
 
-    def on_tls_record(record):
+    def on_tls_record(self, record):
         self.notify('on_tls_record', self, record)
 
         if record.haslayer(TLSExtServerNameIndication):
@@ -40,7 +41,7 @@ class TLSContext(Observable):
                     record[TLSExtServerNameIndication].server_names)
             self.notify('on_server_name_indication', self, self.server_names)
 
-        if record.haslayer(TLSCertificateList):
+        elif record.haslayer(TLSCertificateList):
             self.certificates = map(
                     lambda x: Certificate(str(x.data)),
                     record[TLSCertificateList].certificates)
