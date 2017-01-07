@@ -1,7 +1,9 @@
 from tlsd.rules.tls import TLSSessionRule
 
 rules = []
-rules.append(TLSSessionRule('pass'))
+
+rule = TLSSessionRule('pass')
+rules.append(rule)
 
 def match(tls_session):
     for rule in rules:

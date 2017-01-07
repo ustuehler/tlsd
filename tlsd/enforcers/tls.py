@@ -17,23 +17,27 @@ class TLSEnforcer(object):
         self.log_info(tls_context, 'SNI: %s' % (map(lambda x: x.data, server_names),))
 
     def on_certificates(self, tls_context, certificates):
-        for cert in certificates:
-            self.log_info(tls_context, 'subject: %s ' % cert.subject())
+        c = certificates[0]
+        self.log_info(tls_context, 'subject: %s ' % c.subject())
+        c = certificates[len(certificates)-1]
+        self.log_info(tls_context, 'root: %s ' % c.issuer())
 
     def on_application_data(self, tls_context, data):
         self.enforce_rules(tls_context)
 
     def enforce_rules(self, tls_context):
         tls_session = tls_context.session
-        rule = self.rules.match(tls_session)
+        match = self.rules.match(tls_session)
+        if match != None:
+            self.log_info(tls_context, match.summary())
 
-        if rule == None or rule.action == 'pass':
-            tls_session.passthrough()
-        elif rule.action == 'block':
-            if rule.block_policy == 'return':
-                tls_session.block()
+        if match != None and match.action == 'block':
+            if match.block_policy == 'close':
+                tls_context.close()
             else:
-                tls_session.reset()
+                tls_session.block()
+        else:
+            tls_session.passthrough()
 
     def log_info(self, tls_context, msg):
         print '%s %s' % (tls_context.summary(), msg)
