@@ -2,6 +2,7 @@
 
 import sys
 import socket
+from traceback import print_exc
 
 from scapy.layers.inet import IP, TCP
 from scapy.layers import x509
@@ -19,9 +20,11 @@ bufsize = 16384
 
 socket.IPPROTO_DIVERT = 258
 
+from examples import rules
+
 tcp_analyzer = TCPAnalyzer()
 tls_analyzer = TLSAnalyzer(tcp_analyzer)
-tls_enforcer = TLSEnforcer(tls_analyzer)
+tls_enforcer = TLSEnforcer(tls_analyzer, rules)
 
 # TODO: IPv6
 def inspect(packet):
@@ -37,7 +40,7 @@ def enforce(packet):
         return False
     except StandardError as e:
         print '--- %s Ignored ---' % type(e).__name__
-        print '%s' % e
+        print_exc()
         return True
 
 def divert():

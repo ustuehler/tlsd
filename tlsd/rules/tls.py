@@ -33,5 +33,4 @@ class TLSSessionRule(Rule):
         self.server = TLSContextRule()
 
     def match(self, tls_session):
-        return self.client.match(tls_session.client) and \
-                self.server.match(tls_session.server)
+        return True

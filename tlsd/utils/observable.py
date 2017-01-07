@@ -4,6 +4,8 @@ class Observable(object):
 
     def subscribe(self, observer, *methods):
         #print '%s.subscribe(%s, %s)' % (type(self).__name__, type(observer).__name__, methods)
+        if len(methods) < 1:
+            raise StandardError('missing argument')
         for method in methods:
             if not self.observers.has_key(method):
                 self.observers[method] = list()
@@ -11,11 +13,13 @@ class Observable(object):
 
     def unsubscribe(self, observer, *methods):
         #print '%s.unsubscribe(%s, %s)' % (type(self).__name__, type(observer).__name__, methods)
+        if len(methods) == 0:
+            methods = self.observers.keys()
         for method in methods:
             if self.observers.has_key(method):
                 self.observers[method].remove(observer)
                 if len(self.observers[method]) == 0:
-                    self.observers.remove(method)
+                    self.observers.pop(method)
 
     def notify(self, method, *args):
         if self.observers.has_key(method):
