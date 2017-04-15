@@ -29,6 +29,10 @@ and then start the daemon with:
 
     tlsd -l 7000
 
+At this point all incoming and outgoing TCP connections are analysed by TLSD. Those that use either HTTPS or other protocols with Transport Layer Security (except STARTTLS, yet) and fail to match the default ruleset will be terminated before any application data can be exchanged; all other connections are simply passed through, and should not incur any performance overhead at all.
+
+*Note*: Due to the experimental status of the software, the "daemon" will not actually fork and detach from the controlling terminal, but will run in the foreground and pring log messages to standard output.
+
 ## Development
 
 Run the test suite with:
