@@ -1,2 +1,10 @@
+# Temporary editor files and backups
 .*.sw?
+
+# Compiled Python code
 *.pyc
+
+# Temporary directories created by setup.py
+/build/
+/dist/
+/tlsd.egg-info/

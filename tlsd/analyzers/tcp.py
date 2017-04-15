@@ -150,20 +150,21 @@ class TCPConnection(Observable):
             self.notify('on_disconnect', self)
 
 class TCPAnalyzer(Observable):
-    def __init__(self):
+    def __init__(self, diverter):
         Observable.__init__(self)
         self.connections = dict()
+        diverter.subscribe(self, 'on_ip_packet')
+
+    def on_ip_packet(self, packet):
+        if packet.haslayer(TCP):
+            connection = self.tcp_ip_connection(packet)
+            connection.write_tcp_ip(packet)
 
     def on_connect(self, tcp_connection):
         self.notify('on_connect', tcp_connection)
 
     def on_disconnect(self, tcp_connection):
         self.notify('on_disconnect', tcp_connection)
-
-    def write_ip(self, packet):
-        if packet.haslayer(TCP):
-            connection = self.tcp_ip_connection(packet)
-            connection.write_tcp_ip(packet)
 
     def tcp_ip_connection(self, packet):
         connection_id = self.tcp_ip_connection_id(packet)

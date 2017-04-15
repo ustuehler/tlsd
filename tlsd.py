@@ -1,34 +1,52 @@
 #!/usr/bin/env python
 
+import argparse
 import sys
-import socket
 from traceback import print_exc
 
-from scapy.layers.inet import IP, TCP
-from scapy.layers import x509
-from scapy.utils import rdpcap
+from tlsd.diverters.pcap import PcapDiverter
+from tlsd.diverters.tcp import TCPDiverter
+from tlsd.diverters.raw import RawDiverter
 
 from tlsd.analyzers.tcp import TCPAnalyzer
 from tlsd.analyzers.tls import TLSAnalyzer
+
 from tlsd.enforcers.tls import TLSEnforcer
+
+from examples import rules
 
 # listening divert(4) port
 port = 700
 
-# performance/protocol relevant?
-bufsize = 16384
+def main():
+    parser = argparse.ArgumentParser(description='Enforces the specified ruleset on TLS connections')
+    parser.add_argument('-f', metavar='FILE', dest='file', type=str, help='Read captured packets from FILE')
+    parser.add_argument('-l', metavar='PORT', dest='port', type=int, help='Listen on PORT for diverted TCP connections')
+    parser.add_argument('-r', action='store_true', dest='raw', help='Listen on PORT for diverted TCP/IP packets')
+    args = parser.parse_args()
 
-socket.IPPROTO_DIVERT = 258
+    if args.file == None and args.port == None:
+        raise parser.error('either -f or -l must be specified')
+    if args.file != None and args.port != None:
+        raise parser.error('option -f and -l are mutually exclusive')
+    if args.port == None and args.raw:
+        raise parser.error('option -r must be used together with -l')
 
-from examples import rules
+    if args.file:
+        diverter = PcapDiverter(args.file)
+    elif args.raw:
+        diverter = RawDiverter(args.port)
+    else:
+        diverter = TCPDiverter(args.port)
 
-tcp_analyzer = TCPAnalyzer()
-tls_analyzer = TLSAnalyzer(tcp_analyzer)
-tls_enforcer = TLSEnforcer(tls_analyzer, rules)
+    tcp_analyzer = TCPAnalyzer(diverter)
+    tls_analyzer = TLSAnalyzer(tcp_analyzer)
+    tls_enforcer = TLSEnforcer(tls_analyzer, rules)
 
-# TODO: IPv6
-def inspect(packet):
-    tcp_analyzer.write_ip(packet)
+    diverter.divert()
+
+def divert_connections(parser, port):
+    parser.error('option -l without -r is currently not implemented')
 
 def enforce(packet):
     try:
@@ -43,41 +61,9 @@ def enforce(packet):
         print_exc()
         return True
 
-def divert():
-    sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_DIVERT)
-    sock.bind(("0.0.0.0", port))
-    while True:
-        data, address = sock.recvfrom(bufsize)
-        packet = IP(data)
-        if enforce(packet):
-            sock.sendto(data, address)
-        else:
-            #if packet.haslayer(TCP):
-            if False:
-                packet[TCP].flags = 'F'
-                packet[TCP].payload = str()
-                print 'tcp len=%d' % (len(packet[TCP]),)
-                print 'ip len=%d' % (len(packet),)
-                packet.len = len(packet)
-                packet.show()
-            sock.sendto(data, address)
-
-def replay(pcapfile):
-    for packet in rdpcap(pcapfile):
-        if packet.haslayer(IP):
-            enforce(packet[IP])
-
-def usage_error(msg):
-    print >> sys.stderr, sys.argv[0] + ': ' + msg
-    sys.exit(2)
-
-def main():
-    if len(sys.argv) == 1:
-        divert()
-    elif len(sys.argv) == 2:
-        replay(sys.argv[1])
-    else:
-        usage_error('too many arguments')
+# TODO: IPv6
+def inspect(packet):
+    tcp_analyzer.write_ip(packet)
 
 if __name__ == '__main__':
     main()
