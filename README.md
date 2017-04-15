@@ -7,7 +7,7 @@ TLSD analyses TCP streams, identifies TLS handshakes in them and evaluates a dyn
 * Python 2.7
 * OpenBSD pf(4)
 
-The only supported operating system is OpenBSD, because that's what I'm experimenting with at the moment. However, the application can easily be ported to other operating systems (check out the existing "diverters" in the `tlsd/diverters` directory).
+The only supported operating system is OpenBSD, because that's what I'm experimenting with at the moment. However, the application can easily be ported to other operating systems (check out the existing modules in the `tlsd/diverters` directory).
 
 ## Installation from Source
 
