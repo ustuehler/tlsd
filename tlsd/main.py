@@ -53,11 +53,11 @@ def enforce(packet):
         inspect(packet)
         return True
     except TLSEnforcer.CertificateRejectedError as e:
-        print '--- Certificate Rejected ---'
-        print '%s' % e.certificate
+        print('--- Certificate Rejected ---')
+        print('%s' % e.certificate)
         return False
     except StandardError as e:
-        print '--- %s Ignored ---' % type(e).__name__
+        print('--- %s Ignored ---' % type(e).__name__)
         print_exc()
         return True
 

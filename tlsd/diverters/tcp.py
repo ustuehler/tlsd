@@ -1,4 +1,14 @@
-import asyncio
+import sys
+
+# While this software project as whole may or may not fully support Python 3,
+# this module at least supports both, Python 2.7 and 3.x
+if sys.version_info[0] > 2:
+    # The asyncio library is now a core part of Python 3
+    import asyncio
+else:
+    # Backported asyncio library for Python 2, but no longer maintained
+    import trollius as asyncio
+
 from socket import error, socket, getaddrinfo, AF_INET, SOCK_STREAM, IPPROTO_TCP
 
 from tlsd.diverters import AbstractDiverter

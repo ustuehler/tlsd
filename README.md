@@ -9,6 +9,8 @@ TLSD analyses TCP streams, identifies TLS handshakes in them and evaluates a dyn
 
 The only supported operating system is OpenBSD, because that's what I'm experimenting with at the moment. However, the application can easily be ported to other operating systems (check out the existing modules in the [`tlsd/diverters`](tlsd/diverters) directory).
 
+You may be wondering why this project requires Python 2. This is because of a runtime dependency on [Scapy](https://github.com/secdev/scapy/issues/261). Dropping Scapy should allow this project to catch up with sane people and use Python 3.
+
 ## Installation from Source
 
 This project follows the official instructions for [Packaging and Distributing Projects](https://packaging.python.org/distributing/) in Python. This means that you can build and install the `tlsd` command on your system, directly from the sources in this directory with:
